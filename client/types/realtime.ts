@@ -8,6 +8,10 @@ export interface TokenResponse extends Record<string, unknown> {
   value?: string;
 }
 
+export interface ConfigResponse extends Record<string, unknown> {
+  realtimeModel?: string;
+}
+
 export interface ToolCallOutput extends Record<string, unknown> {
   type: "function_call";
   name: string;

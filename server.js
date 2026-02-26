@@ -8,6 +8,7 @@ const app = express();
 app.use(express.text());
 const port = process.env.PORT || 3000;
 const apiKey = process.env.OPENAI_API_KEY;
+const realtimeModel = process.env.REALTIME_MODEL || "gpt-realtime-mini";
 
 const vite = await createViteServer({
   server: { middlewareMode: true },
@@ -18,13 +19,17 @@ app.use(vite.middlewares);
 const sessionConfig = JSON.stringify({
   session: {
     type: "realtime",
-    model: "gpt-realtime-mini",
+    model: realtimeModel,
     audio: {
       output: {
         voice: "marin",
       },
     },
   },
+});
+
+app.get("/config", (_req, res) => {
+  res.json({ realtimeModel });
 });
 
 app.post("/session", async (req, res) => {

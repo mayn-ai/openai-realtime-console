@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import type {
   ChatMessage,
   ChatRole,
+  ConfigResponse,
   ParsedToolArguments,
   RealtimeEvent,
   SessionState,
@@ -525,6 +526,17 @@ export const useRealtimeStore = defineStore("realtime", {
       this.errorMessage = null;
 
       try {
+        const configResponse = await fetch("/config");
+        if (!configResponse.ok) {
+          throw new Error("Config request failed");
+        }
+
+        const configData = (await configResponse.json()) as ConfigResponse;
+        const realtimeModel = asString(configData.realtimeModel);
+        if (!realtimeModel) {
+          throw new Error("Config response does not include realtimeModel");
+        }
+
         const tokenResponse = await fetch("/token");
         if (!tokenResponse.ok) {
           throw new Error("Token request failed");
@@ -553,14 +565,17 @@ export const useRealtimeStore = defineStore("realtime", {
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
 
-        const response = await fetch("https://api.openai.com/v1/realtime/calls?model=gpt-realtime-mini", {
-          method: "POST",
-          body: offer.sdp ?? "",
-          headers: {
-            Authorization: `Bearer ${ephemeralKey}`,
-            "Content-Type": "application/sdp",
+        const response = await fetch(
+          `https://api.openai.com/v1/realtime/calls?model=${encodeURIComponent(realtimeModel)}`,
+          {
+            method: "POST",
+            body: offer.sdp ?? "",
+            headers: {
+              Authorization: `Bearer ${ephemeralKey}`,
+              "Content-Type": "application/sdp",
+            },
           },
-        });
+        );
 
         if (!response.ok) {
           throw new Error("SDP exchange failed");

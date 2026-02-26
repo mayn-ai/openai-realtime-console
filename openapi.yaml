@@ -17,6 +17,27 @@ tags:
     description: Session-Aufbau und Token-Beschaffung
 
 paths:
+  /config:
+    get:
+      tags:
+        - Session
+      summary: Client-Konfiguration abrufen
+      description: |
+        Liefert die serverseitig autoritative Realtime-Konfiguration für den Client.
+        Der Client nutzt `realtimeModel` für den WebRTC-Realtime-Call.
+      operationId: getClientConfig
+      responses:
+        '200':
+          description: Konfiguration erfolgreich geladen
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigResponse'
+              examples:
+                success:
+                  value:
+                    realtimeModel: gpt-realtime-mini
+
   /token:
     get:
       tags:
@@ -84,6 +105,18 @@ paths:
 
 components:
   schemas:
+    ConfigResponse:
+      type: object
+      description: |
+        Serverseitige Konfiguration für den Realtime-WebRTC-Client.
+      properties:
+        realtimeModel:
+          type: string
+          description: Modellname, der für Realtime-Sessions verwendet werden soll.
+      required:
+        - realtimeModel
+      additionalProperties: false
+
     RealtimeClientSecret:
       type: object
       description: |

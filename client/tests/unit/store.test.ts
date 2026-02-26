@@ -59,10 +59,18 @@ describe("realtime store", () => {
   it("handles missing token value", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => ({
-        ok: true,
-        json: async () => ({}),
-      })),
+      vi.fn(async (input: string) => {
+        if (input === "/config") {
+          return {
+            ok: true,
+            json: async () => ({ realtimeModel: "gpt-realtime-mini" }),
+          };
+        }
+        return {
+          ok: true,
+          json: async () => ({}),
+        };
+      }),
     );
 
     const store = useRealtimeStore();
@@ -77,6 +85,12 @@ describe("realtime store", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async (input: string) => {
+        if (input === "/config") {
+          return {
+            ok: true,
+            json: async () => ({ realtimeModel: "gpt-realtime-mini" }),
+          };
+        }
         if (input === "/token") {
           return {
             ok: true,
@@ -116,6 +130,12 @@ describe("realtime store", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async (input: string) => {
+        if (input === "/config") {
+          return {
+            ok: true,
+            json: async () => ({ realtimeModel: "gpt-realtime-mini" }),
+          };
+        }
         if (input === "/token") {
           return {
             ok: true,
@@ -151,6 +171,33 @@ describe("realtime store", () => {
     const sentPayloads = peer.channel.sent.map((payload) => JSON.parse(payload));
     const sessionUpdate = sentPayloads.find((payload) => payload.type === "session.update");
     expect(sessionUpdate?.session?.audio?.input?.transcription?.model).toBe("gpt-4o-mini-transcribe");
+
+    const allFetchCalls = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls;
+    const realtimeCall = allFetchCalls.find((call) => String(call[0]).includes("/v1/realtime/calls?model="));
+    expect(String(realtimeCall?.[0])).toContain("model=gpt-realtime-mini");
+  });
+
+  it("fails cleanly when config has no realtimeModel", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string) => {
+        if (input === "/config") {
+          return {
+            ok: true,
+            json: async () => ({}),
+          };
+        }
+        return {
+          ok: true,
+          json: async () => ({ value: "epk_123" }),
+        };
+      }),
+    );
+
+    const store = useRealtimeStore();
+    await store.startSession();
+    expect(store.errorMessage).toContain("realtimeModel");
+    expect(store.isSessionActive).toBe(false);
   });
 
   it("sendClientEvent enriches event and sends payload", () => {

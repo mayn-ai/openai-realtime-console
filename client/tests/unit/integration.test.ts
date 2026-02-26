@@ -60,6 +60,12 @@ describe("integration flow", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async (input: string) => {
+        if (input === "/config") {
+          return {
+            ok: true,
+            json: async () => ({ realtimeModel: "gpt-realtime-mini" }),
+          };
+        }
         if (input === "/token") {
           return {
             ok: true,
