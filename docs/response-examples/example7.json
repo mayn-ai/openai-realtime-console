@@ -1,0 +1,14 @@
+{
+  "type": "rate_limits.updated",
+  "event_id": "event_DDbhAalFmCEGIVUDR6bLn",
+  "rate_limits": [
+    {
+      "name": "tokens",
+      "limit": 40000,
+      "remaining": 39372,
+      "reset_seconds": 0.942
+    }
+  ],
+  "timestamp": "20:52:16",
+  "isClient": false
+}

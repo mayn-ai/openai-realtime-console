@@ -1,0 +1,14 @@
+{
+  "type": "response.content_part.done",
+  "event_id": "event_DDbhAYX7UxQrcaC3AKbem",
+  "response_id": "resp_DDbh83T4X9Aa65tIWeulH",
+  "item_id": "item_DDbh8KmVVTzl24VoMqvq4",
+  "output_index": 0,
+  "content_index": 0,
+  "part": {
+    "type": "audio",
+    "transcript": "Na klar, ich spreche gerne Deutsch mit dir. Erzähl mir, was du brauchst oder wobei ich dir helfen kann."
+  },
+  "timestamp": "20:52:16",
+  "isClient": false
+}

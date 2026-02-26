@@ -1,0 +1,19 @@
+{
+  "type": "conversation.item.done",
+  "event_id": "event_DDbhAF7gyfs474Ykahs5X",
+  "previous_item_id": "item_DDbh7gPSl0s4xbAwwGmKX",
+  "item": {
+    "id": "item_DDbh8KmVVTzl24VoMqvq4",
+    "type": "message",
+    "status": "completed",
+    "role": "assistant",
+    "content": [
+      {
+        "type": "output_audio",
+        "transcript": "Na klar, ich spreche gerne Deutsch mit dir. Erzähl mir, was du brauchst oder wobei ich dir helfen kann."
+      }
+    ]
+  },
+  "timestamp": "20:52:16",
+  "isClient": false
+}

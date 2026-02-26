@@ -1,0 +1,114 @@
+openapi: 3.1.0
+info:
+  title: Realtime Console Backend API
+  version: 1.0.0
+  description: |
+    OpenAPI-Dokumentation der lokalen Backend-API (Express-Server).
+
+    Wichtig: Dokumentiert sind ausschließlich Endpunkte, die über den eigenen Server laufen.
+    Realtime-Ereignisse, Audio-Streams und weitere Nachrichten laufen im Client direkt per WebRTC
+    gegen die OpenAI Realtime API und sind hier bewusst nicht enthalten.
+servers:
+  - url: http://localhost:3000
+    description: Lokale Entwicklungsumgebung
+
+tags:
+  - name: Session
+    description: Session-Aufbau und Token-Beschaffung
+
+paths:
+  /token:
+    get:
+      tags:
+        - Session
+      summary: Ephemeren Realtime-Client-Token erzeugen
+      description: |
+        Erzeugt serverseitig ein Ephemeral Client Secret bei OpenAI und gibt die Antwort an den Client weiter.
+      operationId: getRealtimeClientToken
+      responses:
+        '200':
+          description: Token erfolgreich erzeugt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RealtimeClientSecret'
+              examples:
+                success:
+                  value:
+                    value: epk_abc123
+                    expires_at: 1735689600
+                    type: client_secret
+        '500':
+          description: Token-Erzeugung fehlgeschlagen
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                failure:
+                  value:
+                    error: Failed to generate token
+
+  /session:
+    post:
+      tags:
+        - Session
+      summary: SDP-Offer via Server an OpenAI weiterleiten (experimentell)
+      description: |
+        Nimmt einen SDP-Offer-String entgegen, leitet ihn an OpenAI weiter und gibt den SDP-Answer zurück.
+        Dieser Endpunkt ist im Code als experimentell markiert.
+      operationId: createSessionFromSdp
+      requestBody:
+        required: true
+        content:
+          application/sdp:
+            schema:
+              type: string
+              description: SDP-Offer des Clients
+          text/plain:
+            schema:
+              type: string
+              description: SDP-Offer des Clients
+      responses:
+        '200':
+          description: SDP-Answer von OpenAI
+          content:
+            application/sdp:
+              schema:
+                type: string
+            text/plain:
+              schema:
+                type: string
+        '500':
+          description: Unerwarteter Serverfehler
+
+components:
+  schemas:
+    RealtimeClientSecret:
+      type: object
+      description: |
+        Durchgereichte OpenAI-Antwort von `/v1/realtime/client_secrets`.
+        Kann zusätzliche Felder enthalten.
+      properties:
+        value:
+          type: string
+          description: Ephemerer API-Key, der im Browser für den Realtime-Handshake verwendet wird.
+        expires_at:
+          type: integer
+          format: int64
+          description: Unix-Timestamp (Sekunden), wann der Token abläuft.
+        type:
+          type: string
+          description: Typbezeichnung aus der OpenAI-Antwort.
+      required:
+        - value
+      additionalProperties: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+      additionalProperties: true

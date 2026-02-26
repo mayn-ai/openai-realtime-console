@@ -1,0 +1,61 @@
+{
+  "type": "response.done",
+  "event_id": "event_DDbhAurGZMYVLOkUKhrEm",
+  "response": {
+    "object": "realtime.response",
+    "id": "resp_DDbh83T4X9Aa65tIWeulH",
+    "status": "completed",
+    "status_details": null,
+    "output": [
+      {
+        "id": "item_DDbh8KmVVTzl24VoMqvq4",
+        "type": "message",
+        "status": "completed",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_audio",
+            "transcript": "Na klar, ich spreche gerne Deutsch mit dir. Erzähl mir, was du brauchst oder wobei ich dir helfen kann."
+          }
+        ]
+      }
+    ],
+    "conversation_id": "conv_DDbgzd1GKsqh4Mm5RTaQx",
+    "output_modalities": [
+      "audio"
+    ],
+    "max_output_tokens": "inf",
+    "audio": {
+      "output": {
+        "format": {
+          "type": "audio/pcm",
+          "rate": 24000
+        },
+        "voice": "marin"
+      }
+    },
+    "usage": {
+      "total_tokens": 475,
+      "input_tokens": 330,
+      "output_tokens": 145,
+      "input_token_details": {
+        "text_tokens": 231,
+        "audio_tokens": 99,
+        "image_tokens": 0,
+        "cached_tokens": 256,
+        "cached_tokens_details": {
+          "text_tokens": 192,
+          "audio_tokens": 64,
+          "image_tokens": 0
+        }
+      },
+      "output_token_details": {
+        "text_tokens": 39,
+        "audio_tokens": 106
+      }
+    },
+    "metadata": null
+  },
+  "timestamp": "20:52:16",
+  "isClient": false
+}

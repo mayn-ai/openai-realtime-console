@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "jsx": "preserve",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["vitest/globals", "node"],
+    "skipLibCheck": true,
+    "noEmit": true,
+    "baseUrl": "."
+  },
+  "include": ["client/**/*.ts", "client/**/*.vue", "client/**/*.d.ts", "vite.config.js"]
+}
