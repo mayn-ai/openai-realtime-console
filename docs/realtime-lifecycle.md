@@ -57,6 +57,20 @@ Für ein Chat-Div sollte dedupliziert und normalisiert gerendert werden:
 3. Pro `item_id` genau eine sichtbare Chat-Nachricht.
 4. `rate_limits.updated` und leere/ungültige Events ignorieren.
 
+## User Transcript Lifecycle
+Für User-Audio wird die Transkription in diesem Projekt clientseitig per `session.update` aktiviert (`input_audio_transcription`).
+
+Erwartete User-relevante Events (abhängig von der Realtime-Version):
+1. `input_audio_buffer.speech_started` -> Start der Spracheingabe, noch kein finaler Text.
+2. `conversation.item.created` mit `item.role = user` und `content.type = input_audio` -> Item existiert, Transkript kann folgen.
+3. `conversation.item.input_audio_transcription.completed` oder `input_audio_transcription.completed` -> finaler User-Transcript verfügbar.
+4. `conversation.item.done` mit `role = user` und Transcript in `item.content[]` -> final bestätigt auf Conversation-Ebene.
+
+Anzeige-Regel im Chat:
+1. Während kein finaler Text für `item_id` vorhanden ist: Platzhalter-Bubble `Transkribiere...` (`status = pending`).
+2. Sobald finaler User-Transcript eintrifft: gleiche `item_id` ersetzen und `status = final` setzen.
+3. Deduplizierung bleibt `item_id`-basiert, wie bei Assistant-Nachrichten.
+
 ## Known Caveats
 - `example6.json` ist leer und repräsentiert keinen nutzbaren Event.
 - `rate_limits.updated` enthält keine Chat-Nachricht.

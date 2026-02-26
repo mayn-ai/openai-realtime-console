@@ -16,6 +16,13 @@ const sessionUpdate: RealtimeEvent = {
   type: "session.update",
   session: {
     type: "realtime",
+    audio: {
+      input: {
+        transcription: {
+          model: "gpt-4o-mini-transcribe",
+        },
+      },
+    },
     tools: [
       {
         type: "function",
@@ -66,6 +73,17 @@ function asString(value: unknown): string | null {
 function eventRole(eventType: string): ChatRole {
   if (eventType.startsWith("response.")) return "assistant";
   return "unknown";
+}
+
+function getEventItemId(event: RealtimeEvent): string | null {
+  const directItemId = asString(event.item_id);
+  if (directItemId) return directItemId;
+
+  const item = asObject(event.item);
+  const nestedItemId = asString(item?.id);
+  if (nestedItemId) return nestedItemId;
+
+  return null;
 }
 
 function contentTranscript(content: unknown): string | null {
@@ -158,6 +176,46 @@ export function extractTranscriptCandidates(events: RealtimeEvent[]): Transcript
       continue;
     }
 
+    if (
+      type === "conversation.item.input_audio_transcription.completed" ||
+      type === "input_audio_transcription.completed"
+    ) {
+      const itemId = getEventItemId(event);
+      const transcript = asString(event.transcript);
+      if (itemId && transcript) {
+        candidates.push({
+          itemId,
+          role: "user",
+          text: transcript,
+          sourceType: type,
+          timestamp,
+          isFinal: true,
+          priority: 6,
+        });
+      }
+      continue;
+    }
+
+    if (
+      type === "conversation.item.input_audio_transcription.delta" ||
+      type === "input_audio_transcription.delta"
+    ) {
+      const itemId = getEventItemId(event);
+      const delta = asString(event.delta);
+      if (itemId && delta) {
+        candidates.push({
+          itemId,
+          role: "user",
+          text: delta,
+          sourceType: type,
+          timestamp,
+          isFinal: false,
+          priority: 5,
+        });
+      }
+      continue;
+    }
+
     if (type === "response.done") {
       const response = asObject(event.response);
       const outputs = asArray(response?.output);
@@ -177,6 +235,55 @@ export function extractTranscriptCandidates(events: RealtimeEvent[]): Transcript
             priority: 1,
           });
         }
+      }
+    }
+  }
+
+  return candidates;
+}
+
+export function extractPendingUserCandidates(events: RealtimeEvent[]): TranscriptCandidate[] {
+  const candidates: TranscriptCandidate[] = [];
+  let pendingCounter = 0;
+
+  for (const event of [...events].reverse()) {
+    const type = event.type;
+    const timestamp = asString(event.timestamp) ?? undefined;
+
+    if (type === "input_audio_buffer.speech_started") {
+      const itemId = getEventItemId(event) ?? `pending-user-${pendingCounter++}`;
+      candidates.push({
+        itemId,
+        role: "user",
+        text: "Transkribiere...",
+        sourceType: type,
+        timestamp,
+        isFinal: false,
+        priority: 0,
+      });
+      continue;
+    }
+
+    if (type === "conversation.item.created") {
+      const item = asObject(event.item);
+      const role = asString(item?.role);
+      const itemId = asString(item?.id);
+      const content = asArray(item?.content);
+      const containsInputAudio = content.some((part) => {
+        const objectPart = asObject(part);
+        return asString(objectPart?.type) === "input_audio";
+      });
+
+      if (role === "user" && itemId && containsInputAudio && !contentTranscript(content)) {
+        candidates.push({
+          itemId,
+          role: "user",
+          text: "Transkribiere...",
+          sourceType: type,
+          timestamp,
+          isFinal: false,
+          priority: 0,
+        });
       }
     }
   }
@@ -225,6 +332,7 @@ export const useRealtimeStore = defineStore("realtime", {
             updatedAt: candidate.timestamp,
             status: candidate.isFinal ? "final" : "streaming",
             sourceType: candidate.sourceType,
+            isPlaceholder: !candidate.isFinal,
             priority: candidate.priority,
           });
           order.push(candidate.itemId);
@@ -240,8 +348,37 @@ export const useRealtimeStore = defineStore("realtime", {
           existing.updatedAt = candidate.timestamp ?? existing.updatedAt;
           existing.status = candidate.isFinal ? "final" : existing.status;
           existing.sourceType = candidate.sourceType;
+          existing.isPlaceholder = !candidate.isFinal;
           existing.priority = candidate.priority;
         }
+      }
+
+      for (const pending of extractPendingUserCandidates(state.events)) {
+        const existing = byItemId.get(pending.itemId);
+        if (existing) {
+          // Keep final transcript if already resolved for this item.
+          if (existing.status === "final") continue;
+          existing.text = "Transkribiere...";
+          existing.role = "user";
+          existing.status = "pending";
+          existing.sourceType = pending.sourceType;
+          existing.isPlaceholder = true;
+          existing.updatedAt = pending.timestamp ?? existing.updatedAt;
+          continue;
+        }
+
+        byItemId.set(pending.itemId, {
+          id: pending.itemId,
+          role: "user",
+          text: "Transkribiere...",
+          createdAt: pending.timestamp,
+          updatedAt: pending.timestamp,
+          status: "pending",
+          sourceType: pending.sourceType,
+          isPlaceholder: true,
+          priority: 0,
+        });
+        order.push(pending.itemId);
       }
 
       return order

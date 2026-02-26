@@ -35,4 +35,26 @@ describe("ChatTranscript", () => {
     expect(wrapper.text()).toContain("assistant");
     expect(wrapper.text()).toContain("response.output_audio_transcript.done");
   });
+
+  it("shows pending user placeholder when transcription is in progress", () => {
+    setActivePinia(createPinia());
+    const store = useRealtimeStore();
+
+    store.events = [
+      {
+        type: "conversation.item.created",
+        item: {
+          id: "item_user_pending",
+          role: "user",
+          content: [{ type: "input_audio" }],
+        },
+        timestamp: "12:01:00",
+      },
+    ];
+
+    const wrapper = mount(ChatTranscript);
+    expect(wrapper.text()).toContain("user");
+    expect(wrapper.text()).toContain("Transkribiere...");
+    expect(wrapper.text()).toContain("pending");
+  });
 });

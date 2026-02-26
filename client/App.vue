@@ -8,13 +8,30 @@
 
   <main class="absolute top-16 left-0 right-0 bottom-0">
     <section class="absolute top-0 left-0 right-[380px] bottom-0 flex">
-      <section class="absolute top-0 left-0 right-0 bottom-32 px-4 overflow-y-auto flex flex-col gap-4">
-        <section class="min-h-[40%]">
-          <ChatTranscript />
-        </section>
-        <section>
-          <h2 class="text-sm font-bold text-gray-700 mb-2">Event Log (Debug)</h2>
-          <EventLog />
+      <section class="absolute top-0 left-0 right-0 bottom-32 px-4 pt-2">
+        <section class="h-full min-h-0 flex flex-col gap-3">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-bold text-gray-700">Chat + Debug</h2>
+            <button
+              class="text-xs px-3 py-1 rounded-full border border-gray-300 bg-white hover:bg-gray-100"
+              @click="showEventLog = !showEventLog"
+            >
+              {{ showEventLog ? "Event-Log ausblenden" : "Event-Log anzeigen" }}
+            </button>
+          </div>
+
+          <section class="flex-1 min-h-0 overflow-hidden">
+            <div class="h-full overflow-y-auto pr-1">
+              <ChatTranscript />
+            </div>
+          </section>
+
+          <section v-if="showEventLog" class="min-h-0 h-[38%] overflow-hidden">
+            <h2 class="text-sm font-bold text-gray-700 mb-2">Event Log (Debug)</h2>
+            <div class="h-[calc(100%-1.5rem)] overflow-y-auto pr-1">
+              <EventLog />
+            </div>
+          </section>
         </section>
       </section>
       <section class="absolute h-32 left-0 right-0 bottom-0 p-4">
@@ -36,6 +53,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from "vue";
 import { useRealtimeStore } from "./stores/realtime";
 import ChatTranscript from "./components/ChatTranscript.vue";
 import EventLog from "./components/EventLog.vue";
@@ -43,4 +61,5 @@ import SessionControls from "./components/SessionControls.vue";
 import ToolPanel from "./components/ToolPanel.vue";
 
 const store = useRealtimeStore();
+const showEventLog = ref(false);
 </script>

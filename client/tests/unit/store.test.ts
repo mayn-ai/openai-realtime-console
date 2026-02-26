@@ -147,6 +147,10 @@ describe("realtime store", () => {
 
     peer.channel.emit("message", { data: JSON.stringify({ type: "session.created", event_id: "event_1" }) });
     expect(store.events.length).toBeGreaterThan(0);
+
+    const sentPayloads = peer.channel.sent.map((payload) => JSON.parse(payload));
+    const sessionUpdate = sentPayloads.find((payload) => payload.type === "session.update");
+    expect(sessionUpdate?.session?.audio?.input?.transcription?.model).toBe("gpt-4o-mini-transcribe");
   });
 
   it("sendClientEvent enriches event and sends payload", () => {

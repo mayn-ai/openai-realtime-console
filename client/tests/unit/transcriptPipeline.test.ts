@@ -54,4 +54,90 @@ describe("transcript pipeline", () => {
 
     expect(store.chatMessagesFromEvents).toHaveLength(0);
   });
+
+  it("maps final user transcript from conversation.item.done", () => {
+    setActivePinia(createPinia());
+    const store = useRealtimeStore();
+
+    store.events = [
+      {
+        type: "conversation.item.done",
+        item: {
+          id: "item_user_1",
+          role: "user",
+          content: [{ type: "input_audio", transcript: "Ich brauche Hilfe." }],
+        },
+      },
+    ];
+
+    const messages = store.chatMessagesFromEvents;
+    expect(messages).toHaveLength(1);
+    expect(messages[0].role).toBe("user");
+    expect(messages[0].text).toBe("Ich brauche Hilfe.");
+    expect(messages[0].status).toBe("final");
+  });
+
+  it("shows pending placeholder and replaces it with final transcript", () => {
+    setActivePinia(createPinia());
+    const store = useRealtimeStore();
+
+    store.events = [
+      {
+        type: "conversation.item.created",
+        item: {
+          id: "item_user_2",
+          role: "user",
+          content: [{ type: "input_audio" }],
+        },
+      },
+    ];
+
+    let messages = store.chatMessagesFromEvents;
+    expect(messages).toHaveLength(1);
+    expect(messages[0].status).toBe("pending");
+    expect(messages[0].text).toBe("Transkribiere...");
+
+    store.events = [
+      {
+        type: "conversation.item.done",
+        item: {
+          id: "item_user_2",
+          role: "user",
+          content: [{ type: "input_audio", transcript: "Das ist mein finaler Text." }],
+        },
+      },
+      ...store.events,
+    ];
+
+    messages = store.chatMessagesFromEvents;
+    expect(messages).toHaveLength(1);
+    expect(messages[0].status).toBe("final");
+    expect(messages[0].text).toBe("Das ist mein finaler Text.");
+  });
+
+  it("keeps mixed timeline stable for user and assistant", () => {
+    setActivePinia(createPinia());
+    const store = useRealtimeStore();
+
+    store.events = [
+      {
+        type: "response.output_audio_transcript.done",
+        item_id: "item_assistant_1",
+        transcript: "Hallo, wie kann ich helfen?",
+      },
+      {
+        type: "conversation.item.done",
+        item: {
+          id: "item_user_1",
+          role: "user",
+          content: [{ type: "input_audio", transcript: "Bitte erkläre mir den Ablauf." }],
+        },
+      },
+    ];
+
+    const messages = store.chatMessagesFromEvents;
+    expect(messages).toHaveLength(2);
+    expect(messages.some((m) => m.role === "assistant")).toBe(true);
+    expect(messages.some((m) => m.role === "user")).toBe(true);
+  });
 });

@@ -20,7 +20,7 @@ export interface ParsedToolArguments {
 }
 
 export type ChatRole = "assistant" | "user" | "unknown";
-export type ChatStatus = "streaming" | "final";
+export type ChatStatus = "pending" | "streaming" | "final";
 
 export interface TranscriptCandidate {
   itemId: string;
@@ -40,6 +40,7 @@ export interface ChatMessage {
   updatedAt?: string;
   status: ChatStatus;
   sourceType: string;
+  isPlaceholder?: boolean;
 }
 
 export interface SessionState {
